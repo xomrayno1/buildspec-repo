@@ -2,18 +2,20 @@ version: 0.2
 run-as: Linux-user-name
 env:
   shell: shell-tag
-  variables:
+  variables: # định nghĩa 1 danh sách env variable bạn muốn cung cấp đến CodeBuild trong thực thi build
     key:   "value"
-  parameter-store:
+  parameter-store: # chứa key và value mapping, bắt buộc nếu bạn muốn nhận variable được lưu trong EC2 System Manager Parameter Store, key chỉ định tên biến được sử dụng để build
     key:  "value"
   exported-variables:
     -  variable
   secrets-manager:
+  #chứa key mapping với systax secret-id:json:version-stage:version-id, bắt buộc nếu muốn nhận biến lưu trữ trong aws secrets manager. Trong secret-id refers đến ARN của secrets
+  #json-key là tên của secrets manager key-value pair
     key: secret-id:json-key:version-stage:version-id
 phases:
   install: ## install version env
     run-as: Linux-user-name
-    on-failure: ABORT | CONTINUE
+    on-failure: ABORT | CONTINUE # chỉ định hành động khi pharse thất bại, ABORT nếu pharse thất bại thì sẽ build faild, CONTINUE thì lỗi ở pharse hiện tại, thì tiếp tục build pharse tiếp theo
     runtime-versions: 
       java: corretto11
   pre_build: # run trước khi build
@@ -24,7 +26,7 @@ phases:
     commands:
       - echo Build started on `date`
       - mvn test
-  post_build: # sau khi build
+  post_build: # command run sau khi build, vd: đóng gói build arftift, push lên docker image đến docker repository hoặc ECR hoặc gửi build notification.
     commands:
       - echo Build completed on `date`
       - mvn package
