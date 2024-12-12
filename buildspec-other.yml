@@ -1,0 +1,46 @@
+version: 0.2
+run-as: Linux-user-name
+env:
+  shell: shell-tag
+  variables:
+    key:   "value"
+  parameter-store:
+    key:  "value"
+  exported-variables:
+    -  variable
+  secrets-manager:
+    key: secret-id:json-key:version-stage:version-id
+phases:
+  install: ## install version env
+    run-as: Linux-user-name
+    on-failure: ABORT | CONTINUE
+    runtime-versions: 
+      java: corretto11
+  pre_build: # run trước khi build
+    commands:
+      - echo Starting pre-build phase
+      - java -version
+  build: # build
+    commands:
+      - echo Build started on `date`
+      - mvn test
+  post_build: # sau khi build
+    commands:
+      - echo Build completed on `date`
+      - mvn package
+reports:
+  arn:aws:codebuild:us-east-1:279522866734:report-group/
+aws-code-deploy-test-report:
+    base-directory: 'target/surefire-reports'
+    files:
+        - TEST-com.packt.aws.books.pipeline.
+AwsCodePipelineApplicationTests.xml
+    discard-paths: yes
+    file-format: JUNITXML
+artifacts:
+  name: code-pipeline-demo-$(date +%Y-%m-%d)
+  files:
+    - target/aws-code-pipeline*.jar
+    - appspec.yml
+    - scripts/*
+  discard-paths: yes
